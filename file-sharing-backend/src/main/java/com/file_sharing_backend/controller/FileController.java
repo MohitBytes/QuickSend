@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin("*") // needed for Vercel frontend
+@CrossOrigin("*")
 public class FileController {
 
     private final FileService fileService;
