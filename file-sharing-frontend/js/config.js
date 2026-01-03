@@ -1,1 +1,1 @@
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "https://quicksend-backend-41uv.onrender.com/api";
