@@ -10,6 +10,7 @@ import com.file_sharing_backend.service.FileService;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
 import java.util.Map;
 
 @RestController
@@ -78,7 +79,14 @@ public class FileController {
         File file = new File(meta.getFilePath());
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
 
+        // Detect content type
+        String contentType = Files.probeContentType(file.toPath());
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
         return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + meta.getFileName() + "\"")
                 .contentLength(file.length())
