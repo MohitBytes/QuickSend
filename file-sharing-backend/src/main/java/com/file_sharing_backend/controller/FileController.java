@@ -84,6 +84,9 @@ public class FileController {
         if (contentType == null) {
             contentType = "application/octet-stream";
         }
+        
+        // Mark as downloaded
+        meta.setDownloaded(true);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
@@ -91,6 +94,24 @@ public class FileController {
                         "attachment; filename=\"" + meta.getFileName() + "\"")
                 .contentLength(file.length())
                 .body(resource);
+    }
+    
+    @GetMapping("/status/{code}")
+    public ResponseEntity<?> status(@PathVariable String code) {
+        FileMeta meta = fileService.getFile(code);
+        
+        if (meta == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "File not found"));
+        }
+        
+        boolean isExpired = meta.getExpiryTime() < System.currentTimeMillis();
+        
+        return ResponseEntity.ok(Map.of(
+            "downloaded", meta.isDownloaded(),
+            "expired", isExpired,
+            "filename", meta.getFileName()
+        ));
     }
 }
 

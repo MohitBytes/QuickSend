@@ -12,13 +12,16 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Click to select file
   if (selectFileBtn) {
-    selectFileBtn.addEventListener('click', () => fileInput.click());
+    selectFileBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      fileInput.click();
+    });
   }
   
   // Drop zone click
   if (dropZone) {
-    dropZone.addEventListener('click', (e) => {
-      if (e.target === dropZone || e.target.closest('.drop-zone-content')) {
+    dropZone.addEventListener('click', function(e) {
+      if (!selectedFile && (e.target === dropZone || e.target.closest('.drop-zone-content'))) {
         fileInput.click();
       }
     });
@@ -137,41 +140,72 @@ async function uploadFile(event) {
   const btnText = document.getElementById('btnText');
   const spinner = document.getElementById('spinner');
   const uploadCard = document.querySelector('.upload-card');
+  const progressContainer = document.getElementById('progressContainer');
   
   if (sendBtn) sendBtn.disabled = true;
   if (btnText) btnText.textContent = 'Uploading...';
   if (spinner) spinner.style.display = 'block';
+  if (progressContainer) progressContainer.style.display = 'block';
   
   const formData = new FormData();
   formData.append('file', selectedFile);
   
-  try {
-    const res = await fetch(API_BASE + '/upload', {
-      method: 'POST',
-      body: formData
-    });
-    
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error('Server error:', errorText);
-      throw new Error('Upload failed');
+  // Use XMLHttpRequest for progress tracking
+  const xhr = new XMLHttpRequest();
+  
+  xhr.upload.onprogress = function(e) {
+    if (e.lengthComputable) {
+      const percent = Math.round((e.loaded / e.total) * 100);
+      updateProgressBar(percent);
+    }
+  };
+  
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        console.log('Upload successful:', data);
+        
+        // Hide upload card and show result
+        if (uploadCard) uploadCard.style.display = 'none';
+        showResult(data.code);
+      } catch (err) {
+        console.error('Parse error:', err);
+        showError('Failed to process server response');
+      }
+    } else {
+      console.error('Upload failed with status:', xhr.status);
+      showError('Upload failed: ' + xhr.statusText);
     }
     
-    const data = await res.json();
-    console.log('Upload successful:', data);
-    
-    // Hide upload card and show result
-    if (uploadCard) uploadCard.style.display = 'none';
-    showResult(data.code);
-    
-  } catch (err) {
-    console.error('Upload error:', err);
-    showError(err.message || 'Failed to upload. Please check if the server is running.');
-  } finally {
+    // Reset button state
     if (sendBtn) sendBtn.disabled = false;
     if (btnText) btnText.textContent = 'Send File';
     if (spinner) spinner.style.display = 'none';
-  }
+    if (progressContainer) progressContainer.style.display = 'none';
+  };
+  
+  xhr.onerror = function() {
+    console.error('Network error');
+    showError('Network error. Please check if the server is running.');
+    
+    // Reset button state
+    if (sendBtn) sendBtn.disabled = false;
+    if (btnText) btnText.textContent = 'Send File';
+    if (spinner) spinner.style.display = 'none';
+    if (progressContainer) progressContainer.style.display = 'none';
+  };
+  
+  xhr.open('POST', API_BASE + '/upload', true);
+  xhr.send(formData);
+}
+
+function updateProgressBar(percent) {
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  
+  if (progressBar) progressBar.style.width = percent + '%';
+  if (progressText) progressText.textContent = percent + '%';
 }
 
 function showResult(code) {
@@ -180,6 +214,63 @@ function showResult(code) {
   
   if (resultCard) resultCard.style.display = 'block';
   if (codeDisplay) codeDisplay.textContent = code;
+  
+  // Start polling for download status
+  startStatusPolling(code);
+}
+
+let statusPollingInterval = null;
+
+function startStatusPolling(code) {
+  // Clear any existing interval
+  if (statusPollingInterval) {
+    clearInterval(statusPollingInterval);
+  }
+  
+  statusPollingInterval = setInterval(async () => {
+    try {
+      const res = await fetch(API_BASE + '/status/' + code);
+      
+      if (!res.ok) {
+        console.error('Status check failed');
+        return;
+      }
+      
+      const data = await res.json();
+      
+      if (data.downloaded) {
+        clearInterval(statusPollingInterval);
+        statusPollingInterval = null;
+        showDownloadNotification();
+      }
+      
+      if (data.expired) {
+        clearInterval(statusPollingInterval);
+        statusPollingInterval = null;
+      }
+    } catch (err) {
+      console.error('Status polling error:', err);
+    }
+  }, 3000); // Poll every 3 seconds
+}
+
+function showDownloadNotification() {
+  const downloadStatus = document.getElementById('downloadStatus');
+  
+  if (downloadStatus) {
+    downloadStatus.style.display = 'flex';
+    
+    // Animate in
+    downloadStatus.style.animation = 'slideUp 0.4s ease';
+    
+    // Optional: Play a sound or show browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('QuickSend', {
+        body: 'Your file has been downloaded!',
+        icon: '/favicon.ico'
+      });
+    }
+  }
 }
 
 function showError(message) {
