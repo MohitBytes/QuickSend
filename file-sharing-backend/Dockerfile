@@ -7,6 +7,7 @@ COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
 
+# Fix permission issue
 RUN chmod +x mvnw
 
 # Download dependencies
@@ -18,6 +19,10 @@ COPY src ./src
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
+# Copy the jar to a fixed name
+RUN cp target/*.jar app.jar
+
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/*.jar"]
+# Run the app
+CMD ["java", "-jar", "app.jar"]
