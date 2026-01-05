@@ -1,7 +1,5 @@
-// DOM Elements
 let selectedFiles = [];
 
-// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   const dropZone = document.getElementById('dropZone');
   const fileInput = document.getElementById('fileInput');
@@ -10,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const changeFileBtn = document.getElementById('changeFileBtn');
   const copyBtn = document.getElementById('copyBtn');
   
-  // Click to select file
   if (selectFileBtn) {
     selectFileBtn.addEventListener('click', function(e) {
       e.stopPropagation();
@@ -18,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Drop zone click
   if (dropZone) {
     dropZone.addEventListener('click', function(e) {
       if (selectedFiles.length === 0 && (e.target === dropZone || e.target.closest('.drop-zone-content'))) {
@@ -27,24 +23,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // File input change
   if (fileInput) {
     fileInput.addEventListener('change', handleFileSelect);
   }
   
-  // Drag and drop
   if (dropZone) {
     dropZone.addEventListener('dragover', handleDragOver);
     dropZone.addEventListener('dragleave', handleDragLeave);
     dropZone.addEventListener('drop', handleDrop);
   }
   
-  // Send button
   if (sendBtn) {
     sendBtn.addEventListener('click', uploadFile);
   }
   
-  // Change file button
   if (changeFileBtn) {
     changeFileBtn.addEventListener('click', () => {
       selectedFiles = [];
@@ -53,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Copy code button
   if (copyBtn) {
     copyBtn.addEventListener('click', copyCode);
   }
@@ -92,14 +83,12 @@ function handleFileSelect(e) {
 }
 
 function validateAndShowFiles() {
-  // Validate file count
   if (selectedFiles.length > 20) {
     showError('Maximum 20 files allowed. Please select fewer files.');
     selectedFiles = [];
     return;
   }
   
-  // Validate total size (200MB)
   const totalSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
   const maxSize = 200 * 1024 * 1024; // 200MB
   
@@ -109,7 +98,6 @@ function validateAndShowFiles() {
     return;
   }
   
-  // Show file preview
   if (selectedFiles.length === 1) {
     showFilePreview(selectedFiles[0]);
   } else {
@@ -178,7 +166,6 @@ async function uploadFile(event) {
     return;
   }
   
-  // Show loading state
   const sendBtn = document.getElementById('sendBtn');
   const btnText = document.getElementById('btnText');
   const spinner = document.getElementById('spinner');
@@ -195,7 +182,6 @@ async function uploadFile(event) {
     formData.append('files', file);
   });
   
-  // Use XMLHttpRequest for progress tracking
   const xhr = new XMLHttpRequest();
   
   xhr.upload.onprogress = function(e) {
@@ -211,7 +197,6 @@ async function uploadFile(event) {
         const data = JSON.parse(xhr.responseText);
         console.log('Upload successful:', data);
         
-        // Hide upload card and show result
         if (uploadCard) uploadCard.style.display = 'none';
         showResult(data.code, data.zipped, data.fileCount);
       } catch (err) {
@@ -228,7 +213,6 @@ async function uploadFile(event) {
       }
     }
     
-    // Reset button state
     if (sendBtn) sendBtn.disabled = false;
     if (btnText) btnText.textContent = 'Send File';
     if (spinner) spinner.style.display = 'none';
@@ -239,7 +223,6 @@ async function uploadFile(event) {
     console.error('Network error');
     showError('Network error. Please check if the server is running.');
     
-    // Reset button state
     if (sendBtn) sendBtn.disabled = false;
     if (btnText) btnText.textContent = 'Send File';
     if (spinner) spinner.style.display = 'none';
@@ -270,14 +253,12 @@ function showResult(code, zipped, fileCount) {
     resultMessage.textContent = `${fileCount} files zipped. Share this code to receive the ZIP file.`;
   }
   
-  // Start polling for download status
   startStatusPolling(code);
 }
 
 let statusPollingInterval = null;
 
 function startStatusPolling(code) {
-  // Clear any existing interval
   if (statusPollingInterval) {
     clearInterval(statusPollingInterval);
   }
@@ -306,7 +287,7 @@ function startStatusPolling(code) {
     } catch (err) {
       console.error('Status polling error:', err);
     }
-  }, 3000); // Poll every 3 seconds
+  }, 3000); 
 }
 
 function showDownloadNotification() {
@@ -315,10 +296,8 @@ function showDownloadNotification() {
   if (downloadStatus) {
     downloadStatus.style.display = 'flex';
     
-    // Animate in
     downloadStatus.style.animation = 'slideUp 0.4s ease';
     
-    // Optional: Play a sound or show browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('QuickSend', {
         body: 'Your file has been downloaded!',
@@ -345,7 +324,6 @@ function copyCode() {
   if (codeDisplay) {
     const code = codeDisplay.textContent;
     
-    // Copy to clipboard
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(code).then(() => {
         showCopyFeedback();

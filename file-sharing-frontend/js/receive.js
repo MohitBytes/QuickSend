@@ -1,4 +1,3 @@
-// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   const downloadBtn = document.getElementById('downloadBtn');
   const codeInput = document.getElementById('codeInput');
@@ -7,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     downloadBtn.addEventListener('click', downloadFile);
   }
   
-  // Allow Enter key to trigger download
+
   if (codeInput) {
     codeInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
@@ -15,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Auto-format input to only accept numbers
+
     codeInput.addEventListener('input', function(e) {
       this.value = this.value.replace(/\D/g, '').substring(0, 6);
     });
@@ -51,7 +50,7 @@ async function downloadFile(event) {
   if (spinner) spinner.style.display = 'block';
   
   try {
-    // Validate code with backend first
+
     const statusRes = await fetch(API_BASE + '/status/' + code);
     
     if (!statusRes.ok) {
@@ -68,13 +67,10 @@ async function downloadFile(event) {
       return false;
     }
     
-    // Code is valid, proceed with download
     if (btnText) btnText.textContent = 'Downloading...';
     
-    // Trigger download
     window.location.href = API_BASE + '/download/' + code;
     
-    // Reset button after a delay
     setTimeout(() => {
       resetButton(downloadBtn, btnText, spinner);
     }, 2000);
@@ -103,7 +99,6 @@ function showError(message) {
   if (errorCard) {
     errorCard.style.display = 'block';
     
-    // Hide error card after 3 seconds
     setTimeout(() => {
       errorCard.style.display = 'none';
     }, 3000);

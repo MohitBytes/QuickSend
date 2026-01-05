@@ -16,9 +16,9 @@ public class TextService {
 
     private final Map<String, TextMeta> store = new ConcurrentHashMap<>();
     
-    private final long EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
-    private final int MAX_TEXT_SIZE = 2 * 1024 * 1024; // 2 MB in bytes
-    private final int MAX_STORED_TEXTS = 1000; // Prevent memory exhaustion
+    private final long EXPIRY_MS = 10 * 60 * 1000; 
+    private final int MAX_TEXT_SIZE = 2 * 1024 * 1024; 
+    private final int MAX_STORED_TEXTS = 1000; 
     private final int MAX_CODE_GENERATION_ATTEMPTS = 10;
 
     @PostConstruct
@@ -32,21 +32,19 @@ public class TextService {
             throw new IllegalArgumentException("Text cannot be empty");
         }
         
-        // Check size limit (2 MB)
+        // Check size limit 
         int sizeInBytes = text.getBytes("UTF-8").length;
         if (sizeInBytes > MAX_TEXT_SIZE) {
             throw new IllegalArgumentException("Text size exceeds maximum limit of 2MB");
         }
 
-        // Clean expired entries before adding new one
+
         cleanExpiredEntries();
         
-        // Check if we've reached storage limit
         if (store.size() >= MAX_STORED_TEXTS) {
             throw new IllegalStateException("Storage limit reached. Please try again later.");
         }
 
-        // Generate unique 6-digit code with collision prevention
         String code = generateUniqueCode();
         
         // Store text with expiry time
@@ -71,7 +69,6 @@ public class TextService {
             }
         }
         
-        // If we couldn't generate a unique code after max attempts
         throw new IllegalStateException("Unable to generate unique code. Please try again.");
     }
 
@@ -106,10 +103,7 @@ public class TextService {
         store.entrySet().removeIf(entry -> entry.getValue().getExpiryTime() < currentTime);
     }
     
-    /**
-     * Scheduled cleanup task - runs every 5 minutes
-     * Automatically removes expired text entries to prevent memory leaks
-     */
+    
     @Scheduled(fixedRate = 300000) // 5 minutes
     public void scheduledCleanup() {
         int sizeBefore = store.size();

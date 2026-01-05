@@ -66,7 +66,6 @@ public class FileController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Maximum 20 files allowed"));
             }
             
-            // Validate total size (200MB)
             long totalSize = 0;
             for (MultipartFile file : files) {
                 totalSize += file.getSize();
@@ -76,7 +75,6 @@ public class FileController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Total file size exceeds 200MB"));
             }
             
-            // Single file - upload normally
             if (files.length == 1) {
                 MultipartFile file = files[0];
                 if (file.isEmpty()) {
@@ -93,7 +91,6 @@ public class FileController {
                 ));
             }
             
-            // Multiple files - create ZIP
             String code = fileService.saveMultipleFilesAsZip(files);
             return ResponseEntity.ok(Map.of(
                 "code", code,
@@ -127,7 +124,6 @@ public class FileController {
             contentType = "application/octet-stream";
         }
         
-        // Mark as downloaded
         meta.setDownloaded(true);
 
         return ResponseEntity.ok()

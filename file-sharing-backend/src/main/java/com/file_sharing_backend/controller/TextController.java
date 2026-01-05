@@ -39,7 +39,7 @@ public class TextController {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
         } catch (IllegalStateException e) {
-            // Storage limit or code generation failure
+
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
@@ -64,7 +64,7 @@ public class TextController {
                 .body(Map.of("error", "Invalid or expired code"));
         }
 
-        // Mark as viewed (thread-safe since TextMeta is accessed via ConcurrentHashMap)
+        // Mark as viewed 
         meta.setViewed(true);
 
         return ResponseEntity.ok(Map.of(

@@ -27,7 +27,7 @@ public class FileService {
     @Value("${file.upload-dir:./uploads}")
     private String UPLOAD_DIR;
     
-    private final long EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+    private final long EXPIRY_MS = 10 * 60 * 1000; 
     
     @PostConstruct
     public void init() {
@@ -43,7 +43,6 @@ public class FileService {
 
         String code = String.format("%06d", new Random().nextInt(999999));
         
-        // Ensure upload directory exists
         Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath();
         Files.createDirectories(uploadPath);
 
@@ -66,7 +65,6 @@ public class FileService {
     public String saveMultipleFilesAsZip(MultipartFile[] files) throws Exception {
         String code = String.format("%06d", new Random().nextInt(999999));
         
-        // Ensure upload directory exists
         Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath();
         Files.createDirectories(uploadPath);
 
