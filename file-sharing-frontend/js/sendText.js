@@ -65,7 +65,7 @@ async function sendText() {
   spinner.style.display = 'block';
   
   try {
-    const response = await fetch(`${API_BASE_URL}/api/text/send`, {
+    const response = await fetch(`${API_BASE}/text/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ function startStatusPolling(code) {
   // Poll every 3 seconds
   statusCheckInterval = setInterval(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/text/status/${code}`);
+      const response = await fetch(`${API_BASE}/text/status/${code}`);
       
       // If code is not found or expired, stop polling
       if (response.status === 404) {

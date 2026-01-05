@@ -51,7 +51,7 @@ async function receiveText() {
   spinner.style.display = 'block';
   
   try {
-    const response = await fetch(`${API_BASE_URL}/api/text/${code}`);
+    const response = await fetch(`${API_BASE}/text/${code}`);
     const data = await response.json();
     
     if (!response.ok) {
