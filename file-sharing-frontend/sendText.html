@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send Text - QuickSend</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <a href="index.html" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
+      </a>
+      <h1>Send Text</h1>
+    </header>
+
+    <main class="main-content">
+      <div class="text-card">
+        <div class="text-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+
+        <h2>Enter Your Text</h2>
+        <p>Type or paste text to share (up to 2MB)</p>
+
+        <div class="text-input-container">
+          <textarea 
+            id="textInput" 
+            class="text-input" 
+            placeholder="Type or paste your text here..."
+            maxlength="2097152"
+          ></textarea>
+          <div class="char-counter">
+            <span id="charCount">0</span> / 2 MB
+            <span id="sizeWarning" class="size-warning" style="display: none;">⚠️ Size limit exceeded</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-large" id="sendTextBtn" disabled>
+          <span id="btnText">Send Text</span>
+          <div class="spinner" id="spinner" style="display: none;"></div>
+        </button>
+      </div>
+
+      <div class="result-card" id="resultCard" style="display: none;">
+        <div class="success-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2>Text Saved Successfully!</h2>
+        <p class="result-message">Share this code to receive the text</p>
+        
+        <div class="code-display">
+          <span class="code" id="codeDisplay"></span>
+          <button type="button" class="btn btn-icon" id="copyBtn" title="Copy code">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="download-status" id="viewedStatus" style="display: none;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Text has been viewed by receiver!</span>
+        </div>
+        
+        <p class="expiry-notice">⏱️ Code expires in 10 minutes</p>
+        
+        <button type="button" class="btn btn-secondary" onclick="location.reload()">Send Another Text</button>
+      </div>
+
+      <div class="error-card" id="errorCard" style="display: none;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p id="errorMessage"></p>
+        <button type="button" class="btn btn-secondary" onclick="location.reload()">Try Again</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/sendText.js"></script>
+</body>
+</html>
