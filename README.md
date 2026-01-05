@@ -1,4 +1,4 @@
-# QuickSend 🚀
+# QuickSend 🚀 (https://quicksend-frontend.onrender.com/)
 
 QuickSend is a modern, fast, and secure file sharing platform that enables instant file and text sharing with simple 6-digit codes. Share files up to 200MB and text up to 2MB with automatic 10-minute expiry.
 
