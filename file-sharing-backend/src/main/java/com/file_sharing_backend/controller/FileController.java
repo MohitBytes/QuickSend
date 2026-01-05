@@ -10,8 +10,11 @@ import com.file_sharing_backend.service.FileService;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping("/api")
@@ -39,26 +42,65 @@ public class FileController {
     @GetMapping("/upload")
     public ResponseEntity<?> uploadInfo() {
         return ResponseEntity.ok(Map.of(
-            "message", "This endpoint requires a POST request with a file",
+            "message", "This endpoint requires a POST request with one or more files",
             "method", "POST",
             "endpoint", "/api/upload",
-            "parameter", "file (multipart/form-data)",
-            "usage", "Use the Send File page in the frontend to upload files"
+            "parameter", "files (multipart/form-data)",
+            "limits", Map.of(
+                "maxFiles", 20,
+                "maxTotalSize", "200MB"
+            ),
+            "usage", "Use the Send File page in the frontend to upload files. Multiple files will be automatically zipped."
         ));
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> upload(@RequestParam("files") MultipartFile[] files) {
         try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
+            // Validate file count
+            if (files == null || files.length == 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No files uploaded"));
             }
             
-            String code = fileService.saveFile(file);
+            if (files.length > 20) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Maximum 20 files allowed"));
+            }
+            
+            // Validate total size (200MB)
+            long totalSize = 0;
+            for (MultipartFile file : files) {
+                totalSize += file.getSize();
+            }
+            long maxSize = 200L * 1024 * 1024; // 200MB
+            if (totalSize > maxSize) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Total file size exceeds 200MB"));
+            }
+            
+            // Single file - upload normally
+            if (files.length == 1) {
+                MultipartFile file = files[0];
+                if (file.isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
+                }
+                
+                String code = fileService.saveFile(file);
+                return ResponseEntity.ok(Map.of(
+                    "code", code,
+                    "filename", file.getOriginalFilename(),
+                    "zipped", false,
+                    "fileCount", 1,
+                    "message", "File uploaded successfully"
+                ));
+            }
+            
+            // Multiple files - create ZIP
+            String code = fileService.saveMultipleFilesAsZip(files);
             return ResponseEntity.ok(Map.of(
                 "code", code,
-                "filename", file.getOriginalFilename(),
-                "message", "File uploaded successfully"
+                "filename", "files.zip",
+                "zipped", true,
+                "fileCount", files.length,
+                "message", "Files uploaded and zipped successfully"
             ));
         } catch (Exception e) {
             e.printStackTrace();

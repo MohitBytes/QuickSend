@@ -9,12 +9,15 @@ import com.file_sharing_backend.model.FileMeta;
 import jakarta.annotation.PostConstruct;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class FileService {
@@ -58,6 +61,39 @@ public class FileService {
 
     public FileMeta getFile(String code) {
         return store.get(code);
+    }
+
+    public String saveMultipleFilesAsZip(MultipartFile[] files) throws Exception {
+        String code = String.format("%06d", new Random().nextInt(999999));
+        
+        // Ensure upload directory exists
+        Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath();
+        Files.createDirectories(uploadPath);
+
+        // Create ZIP file
+        String zipFileName = code + "_files.zip";
+        Path zipPath = uploadPath.resolve(zipFileName);
+        
+        try (FileOutputStream fos = new FileOutputStream(zipPath.toFile());
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+            
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    ZipEntry zipEntry = new ZipEntry(file.getOriginalFilename());
+                    zos.putNextEntry(zipEntry);
+                    zos.write(file.getBytes());
+                    zos.closeEntry();
+                }
+            }
+        }
+
+        store.put(code, new FileMeta(
+                "files.zip",
+                zipPath.toString(),
+                System.currentTimeMillis() + EXPIRY_MS
+        ));
+
+        return code;
     }
 
     public void delete(String code) {
