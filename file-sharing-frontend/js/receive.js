@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-function downloadFile(event) {
+async function downloadFile(event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
@@ -47,22 +47,51 @@ function downloadFile(event) {
   const spinner = downloadBtn ? downloadBtn.querySelector('#spinner') : null;
   
   if (downloadBtn) downloadBtn.disabled = true;
-  if (btnText) btnText.textContent = 'Checking...';
+  if (btnText) btnText.textContent = 'Validating...';
   if (spinner) spinner.style.display = 'block';
   
-  // Start download
-  setTimeout(() => {
+  try {
+    // Validate code with backend first
+    const statusRes = await fetch(API_BASE + '/status/' + code);
+    
+    if (!statusRes.ok) {
+      showError('Invalid code. Please check and try again.');
+      resetButton(downloadBtn, btnText, spinner);
+      return false;
+    }
+    
+    const statusData = await statusRes.json();
+    
+    if (statusData.expired) {
+      showError('This code has expired. Files are only available for 10 minutes.');
+      resetButton(downloadBtn, btnText, spinner);
+      return false;
+    }
+    
+    // Code is valid, proceed with download
+    if (btnText) btnText.textContent = 'Downloading...';
+    
+    // Trigger download
     window.location.href = API_BASE + '/download/' + code;
     
     // Reset button after a delay
     setTimeout(() => {
-      if (downloadBtn) downloadBtn.disabled = false;
-      if (btnText) btnText.textContent = 'Download File';
-      if (spinner) spinner.style.display = 'none';
+      resetButton(downloadBtn, btnText, spinner);
     }, 2000);
-  }, 500);
+    
+  } catch (err) {
+    console.error('Validation error:', err);
+    showError('Unable to connect to server. Please check your connection.');
+    resetButton(downloadBtn, btnText, spinner);
+  }
   
   return false;
+}
+
+function resetButton(downloadBtn, btnText, spinner) {
+  if (downloadBtn) downloadBtn.disabled = false;
+  if (btnText) btnText.textContent = 'Download File';
+  if (spinner) spinner.style.display = 'none';
 }
 
 function showError(message) {
