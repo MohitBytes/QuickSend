@@ -1,5 +1,5 @@
 // DOM Elements
-let selectedFile = null;
+let selectedFiles = [];
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Drop zone click
   if (dropZone) {
     dropZone.addEventListener('click', function(e) {
-      if (!selectedFile && (e.target === dropZone || e.target.closest('.drop-zone-content'))) {
+      if (selectedFiles.length === 0 && (e.target === dropZone || e.target.closest('.drop-zone-content'))) {
         fileInput.click();
       }
     });
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Change file button
   if (changeFileBtn) {
     changeFileBtn.addEventListener('click', () => {
-      selectedFile = null;
+      selectedFiles = [];
       showDropZone();
       fileInput.value = '';
     });
@@ -78,16 +78,42 @@ function handleDrop(e) {
   
   const files = e.dataTransfer.files;
   if (files.length > 0) {
-    selectedFile = files[0];
-    showFilePreview(selectedFile);
+    selectedFiles = Array.from(files);
+    validateAndShowFiles();
   }
 }
 
 function handleFileSelect(e) {
   const files = e.target.files;
   if (files.length > 0) {
-    selectedFile = files[0];
-    showFilePreview(selectedFile);
+    selectedFiles = Array.from(files);
+    validateAndShowFiles();
+  }
+}
+
+function validateAndShowFiles() {
+  // Validate file count
+  if (selectedFiles.length > 20) {
+    showError('Maximum 20 files allowed. Please select fewer files.');
+    selectedFiles = [];
+    return;
+  }
+  
+  // Validate total size (200MB)
+  const totalSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
+  const maxSize = 200 * 1024 * 1024; // 200MB
+  
+  if (totalSize > maxSize) {
+    showError('Total file size exceeds 200MB. Please select smaller files.');
+    selectedFiles = [];
+    return;
+  }
+  
+  // Show file preview
+  if (selectedFiles.length === 1) {
+    showFilePreview(selectedFiles[0]);
+  } else {
+    showMultipleFilesPreview(selectedFiles);
   }
 }
 
@@ -104,6 +130,23 @@ function showFilePreview(file) {
   
   if (fileName) fileName.textContent = file.name;
   if (fileSize) fileSize.textContent = formatFileSize(file.size);
+}
+
+function showMultipleFilesPreview(files) {
+  const dropZoneContent = document.getElementById('dropZoneContent');
+  const filePreview = document.getElementById('filePreview');
+  const fileName = document.getElementById('fileName');
+  const fileSize = document.getElementById('fileSize');
+  const sendBtn = document.getElementById('sendBtn');
+  
+  if (dropZoneContent) dropZoneContent.style.display = 'none';
+  if (filePreview) filePreview.style.display = 'flex';
+  if (sendBtn) sendBtn.style.display = 'flex';
+  
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  
+  if (fileName) fileName.textContent = `${files.length} files selected (will be zipped)`;
+  if (fileSize) fileSize.textContent = formatFileSize(totalSize);
 }
 
 function showDropZone() {
@@ -130,8 +173,8 @@ async function uploadFile(event) {
     event.stopPropagation();
   }
   
-  if (!selectedFile) {
-    showError('Please select a file first');
+  if (selectedFiles.length === 0) {
+    showError('Please select at least one file');
     return;
   }
   
@@ -148,7 +191,9 @@ async function uploadFile(event) {
   if (progressContainer) progressContainer.style.display = 'block';
   
   const formData = new FormData();
-  formData.append('file', selectedFile);
+  selectedFiles.forEach(file => {
+    formData.append('files', file);
+  });
   
   // Use XMLHttpRequest for progress tracking
   const xhr = new XMLHttpRequest();
@@ -168,14 +213,19 @@ async function uploadFile(event) {
         
         // Hide upload card and show result
         if (uploadCard) uploadCard.style.display = 'none';
-        showResult(data.code);
+        showResult(data.code, data.zipped, data.fileCount);
       } catch (err) {
         console.error('Parse error:', err);
         showError('Failed to process server response');
       }
     } else {
       console.error('Upload failed with status:', xhr.status);
-      showError('Upload failed: ' + xhr.statusText);
+      try {
+        const errorData = JSON.parse(xhr.responseText);
+        showError(errorData.error || 'Upload failed: ' + xhr.statusText);
+      } catch {
+        showError('Upload failed: ' + xhr.statusText);
+      }
     }
     
     // Reset button state
@@ -208,12 +258,17 @@ function updateProgressBar(percent) {
   if (progressText) progressText.textContent = percent + '%';
 }
 
-function showResult(code) {
+function showResult(code, zipped, fileCount) {
   const resultCard = document.getElementById('resultCard');
   const codeDisplay = document.getElementById('codeDisplay');
+  const resultMessage = document.querySelector('.result-message');
   
   if (resultCard) resultCard.style.display = 'block';
   if (codeDisplay) codeDisplay.textContent = code;
+  
+  if (resultMessage && zipped) {
+    resultMessage.textContent = `${fileCount} files zipped. Share this code to receive the ZIP file.`;
+  }
   
   // Start polling for download status
   startStatusPolling(code);
