@@ -257,11 +257,15 @@ function showResult(code, zipped, fileCount) {
 }
 
 let statusPollingInterval = null;
+let countdownInterval = null;
 
 function startStatusPolling(code) {
   if (statusPollingInterval) {
     clearInterval(statusPollingInterval);
   }
+  
+  // Start countdown timer
+  startCountdownTimer();
   
   statusPollingInterval = setInterval(async () => {
     try {
@@ -283,11 +287,56 @@ function startStatusPolling(code) {
       if (data.expired) {
         clearInterval(statusPollingInterval);
         statusPollingInterval = null;
+        stopCountdownTimer();
       }
     } catch (err) {
       console.error('Status polling error:', err);
     }
   }, 3000); 
+}
+
+function startCountdownTimer() {
+  const expiryNotice = document.querySelector('.expiry-notice');
+  if (!expiryNotice) return;
+  
+  // Stop any existing countdown
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+  
+  // Set expiry time to 10 minutes from now
+  const expiryTime = Date.now() + (10 * 60 * 1000);
+  
+  function updateTimer() {
+    const now = Date.now();
+    const remaining = expiryTime - now;
+    
+    if (remaining <= 0) {
+      expiryNotice.textContent = '⏱️ Code has expired';
+      expiryNotice.style.color = '#ef4444';
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      return;
+    }
+    
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    
+    expiryNotice.textContent = `⏱️ Code expires in ${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  
+  // Update immediately
+  updateTimer();
+  
+  // Update every second
+  countdownInterval = setInterval(updateTimer, 1000);
+}
+
+function stopCountdownTimer() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
 }
 
 function showDownloadNotification() {
