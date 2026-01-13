@@ -8,6 +8,7 @@ const copyBtn = document.getElementById('copyBtn');
 
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
 let statusCheckInterval = null;
+let countdownInterval = null;
 
 document.addEventListener('DOMContentLoaded', function() {
   if (textInput) {
@@ -136,6 +137,9 @@ function copyCode() {
 }
 
 function startStatusPolling(code) {
+  // Start countdown timer
+  startCountdownTimer();
+  
   statusCheckInterval = setInterval(async () => {
     try {
       const response = await fetch(`${API_BASE}/text/status/${code}`);
@@ -160,6 +164,7 @@ function startStatusPolling(code) {
 
   setTimeout(() => {
     stopStatusPolling();
+    stopCountdownTimer();
   }, 10 * 60 * 1000);
 }
 
@@ -167,6 +172,50 @@ function stopStatusPolling() {
   if (statusCheckInterval) {
     clearInterval(statusCheckInterval);
     statusCheckInterval = null;
+  }
+}
+
+function startCountdownTimer() {
+  const expiryNotice = document.querySelector('.expiry-notice');
+  if (!expiryNotice) return;
+  
+  // Stop any existing countdown
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+  
+  // Set expiry time to 10 minutes from now
+  const expiryTime = Date.now() + (10 * 60 * 1000);
+  
+  function updateTimer() {
+    const now = Date.now();
+    const remaining = expiryTime - now;
+    
+    if (remaining <= 0) {
+      expiryNotice.textContent = '⏱️ Code has expired';
+      expiryNotice.style.color = '#ef4444';
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      return;
+    }
+    
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    
+    expiryNotice.textContent = `⏱️ Code expires in ${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  
+  // Update immediately
+  updateTimer();
+  
+  // Update every second
+  countdownInterval = setInterval(updateTimer, 1000);
+}
+
+function stopCountdownTimer() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
   }
 }
 
@@ -179,4 +228,5 @@ function showViewedStatus() {
 
 window.addEventListener('beforeunload', () => {
   stopStatusPolling();
+  stopCountdownTimer();
 });
