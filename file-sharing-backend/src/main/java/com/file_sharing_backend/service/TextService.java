@@ -95,9 +95,6 @@ public class TextService {
         }
     }
     
-    /**
-     * Clean up expired entries manually
-     */
     public void cleanExpiredEntries() {
         long currentTime = System.currentTimeMillis();
         store.entrySet().removeIf(entry -> entry.getValue().getExpiryTime() < currentTime);
@@ -116,9 +113,6 @@ public class TextService {
         }
     }
     
-    /**
-     * Get current storage statistics for monitoring
-     */
     public Map<String, Object> getStats() {
         return Map.of(
             "totalStored", store.size(),
