@@ -57,7 +57,7 @@ public class FileController {
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("files") MultipartFile[] files) {
         try {
-            // Validate file count
+  
             if (files == null || files.length == 0) {
                 return ResponseEntity.badRequest().body(Map.of("error", "No files uploaded"));
             }
@@ -118,7 +118,6 @@ public class FileController {
         File file = new File(meta.getFilePath());
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
 
-        // Detect content type
         String contentType = Files.probeContentType(file.toPath());
         if (contentType == null) {
             contentType = "application/octet-stream";
