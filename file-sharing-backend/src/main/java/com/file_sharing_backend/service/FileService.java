@@ -68,7 +68,6 @@ public class FileService {
         Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath();
         Files.createDirectories(uploadPath);
 
-        // Create ZIP file
         String zipFileName = code + "_files.zip";
         Path zipPath = uploadPath.resolve(zipFileName);
         

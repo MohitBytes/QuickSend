@@ -51,7 +51,7 @@ public class TextController {
 
     @GetMapping("/{code}")
     public ResponseEntity<?> getText(@PathVariable String code) {
-        // Validate code format
+
         if (code == null || !code.matches("^\\d{6}$")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "Invalid code format. Code must be 6 digits."));
@@ -64,7 +64,6 @@ public class TextController {
                 .body(Map.of("error", "Invalid or expired code"));
         }
 
-        // Mark as viewed 
         meta.setViewed(true);
 
         return ResponseEntity.ok(Map.of(
@@ -93,10 +92,7 @@ public class TextController {
             "expired", false
         ));
     }
-    
-    /**
-     * Admin endpoint to get storage statistics
-     */
+
     @GetMapping("/stats")
     public ResponseEntity<?> getStats() {
         return ResponseEntity.ok(textService.getStats());
